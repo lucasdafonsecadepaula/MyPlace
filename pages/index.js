@@ -1,65 +1,52 @@
-import Head from 'next/head'
-import styles from '../styles/Home.module.css'
+import React from 'react';
+import {table, registroUsers} from './api/utils/AirtableUser';
+import Box from '@material-ui/core/Box';
+import Layout from '../src/components/Layout';
+import ReactMapGL, {Marker} from 'react-map-gl';
+import SearchBar from '../src/components/SearchBar';
 
-export default function Home() {
+
+
+export default function Home({initialUsers}) { 
+  const [viewport, setViewport] = React.useState({
+    latitude: -21.7557592,
+    longitude: -43.3400294,
+    zoom: 14.67,
+  });
   return (
-    <div className={styles.container}>
-      <Head>
-        <title>Create Next App</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-
-      <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
-
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
-        </p>
-
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className={styles.card}
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
-      </main>
-
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel Logo" className={styles.logo} />
-        </a>
-      </footer>
-    </div>
+    <>
+      <Box>
+        <Layout title="MyPlace"></Layout>
+        <ReactMapGL
+            mapStyle="mapbox://styles/lucasdafonsecadepaula/ckllb6f0i0v7g17qn7uk6apsd"
+            mapboxApiAccessToken="pk.eyJ1IjoibHVjYXNkYWZvbnNlY2FkZXBhdWxhIiwiYSI6ImNrbGJrcjhzMDJyaDIzMm5ydDhsODgyZGEifQ.SU8e15tTWit54umOThvsBw"
+            {...viewport} width="100vw" height="94vh" onViewportChange={setViewport}
+            >
+            {initialUsers.map(sla => (
+              <Marker key={sla.id} latitude={sla.fields.Latitude} longitude={sla.fields.Longitude}>
+                <img src="/pessoa.png" height="50px"/>
+              </Marker>
+            ))}
+        </ReactMapGL>
+        <SearchBar />
+      </Box>
+    </>
   )
+}
+export async function getServerSideProps(context){
+  try {
+    const users = await table.select({}).firstPage();
+    return{
+      props: {
+        initialUsers: registroUsers(users),
+      }
+    }
+  } catch (err) {
+    console.error(err);
+    return {
+      props: {
+        err: "Algo deu errado!"
+      }
+  }
+}
 }
