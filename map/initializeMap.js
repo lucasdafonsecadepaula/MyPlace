@@ -1,50 +1,77 @@
-export function initializeMap(mapboxgl, map) {
-    map.on("click", "data", function (e) {
-      var features = map.queryRenderedFeatures(e.point, {
-        layers: ["data"],
-      });
-      var clusterId = features[0].properties.cluster_id;
-      map
-        .getSource("dcmusic.live")
-        .getClusterExpansionZoom(clusterId, function (err, zoom) {
-          if (err) return;
-          map.easeTo({
-            center: features[0].geometry.coordinates,
-            zoom: zoom,
-          });
-        });
-    });
-  
-    map.on("click", "unclustered-point", function (e) {
-      var coordinates = e.features[0].geometry.coordinates.slice();
-      var mag = e.features[0].properties.mag;
-      var tsunami;
-      if (e.features[0].properties.tsunami === 1) {
-        tsunami = "yes";
-      } else {
-        tsunami = "no";
-      }
-      while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-        coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
-      }
-      new mapboxgl.Popup()
-        .setLngLat(coordinates)
-        .setHTML("magnitude: " + mag + "<br>Was there a tsunami?: " + tsunami)
-        .addTo(map);
-    });
-    map.addControl(
-      new mapboxgl.GeolocateControl({
-        positionOptions: {
-          enableHighAccuracy: true,
-        },
-        trackUserLocation: true,
-      })
+import Card from "./card";
+import Home from "../pages/index";
+
+export function initializeMap(mapboxgl, map, data) {
+    /*map.addControl(
+        new mapboxgl.GeolocateControl({
+            positionOptions: {
+                enableHighAccuracy: true,
+            },
+            trackUserLocation: true,
+        })
     );
-  
-    map.on("mouseenter", "data", function () {
-      map.getCanvas().style.cursor = "pointer";
-    });
-    map.on("mouseleave", "data", function () {
-      map.getCanvas().style.cursor = "";
-    });
-  }
+    navigator.geolocation.getCurrentPosition((position) => {
+        console.log(position);
+
+        let marker = new mapboxgl.Marker({
+            anchor: "bottom",
+        })
+            .setLngLat([position.coords.longitude, position.coords.latitude])
+            .addTo(map);
+    }); */
+    {
+        data.users.map((dados) => {
+            if (dados.latitude === undefined) {
+            } else {
+                /* POPUP CONFIG
+                let div = window.document.createElement("div");
+                div.style.content = "url(" + dados.avatar + ")";
+                let popup = new mapboxgl.Popup({
+                    anchor: "bottom",
+                    offset: [0, -64],
+                    closeButton: false,
+                }).setDOMContent(div);*/
+                let icon = document.createElement("div");
+                icon.style.width = "40px";
+                icon.style.backgroundSize = "contain";
+                icon.style.content = "url(" + dados.avatar + ")";
+                icon.style.cursor = "pointer";
+                icon.addEventListener('click', () => console.log(dados._id));
+
+                let marker = new mapboxgl.Marker(icon, {
+                    anchor: "bottom",
+                    offset: [0, 5],
+                })
+                    .setLngLat([
+                        parseFloat(dados.longitude),
+                        parseFloat(dados.latitude),
+                    ])
+                    //.setPopup(popup)  //POPUP
+                    .addTo(map);
+            }
+        });
+    }
+    {
+        data.locais.map((dados) => {
+            if (dados.latitude === undefined) {
+            } else {
+                let icon = document.createElement("div");
+                icon.style.width = "50px";
+                icon.style.backgroundSize = "contain";
+                icon.style.content = "url(" + dados.avatar + ")";
+                icon.style.cursor = "pointer";
+                icon.addEventListener('click', () => console.log(dados._id));
+
+                let marker = new mapboxgl.Marker(icon, {
+                    anchor: "bottom",
+                    offset: [0, 5],
+                })
+                    .setLngLat([
+                        parseFloat(dados.longitude),
+                        parseFloat(dados.latitude),
+                    ])
+                    .addTo(map);
+            }
+        });
+    }
+}
